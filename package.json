@@ -2,11 +2,10 @@
   "name": "pickring-web-jewelry-scrapper",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "gulp",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "gulp"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +14,7 @@
     "@babel/core": "^7.17.10",
     "@babel/plugin-transform-runtime": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
+    "@types/jquery": "^1.10.39",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash": "^4.14.182",
     "babelify": "^10.0.0",
@@ -32,7 +32,6 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.17.9",
-    "js-cookie": "^3.0.1",
-    "lodash": "^4.17.21"
+    "js-cookie": "^3.0.1"
   }
 }

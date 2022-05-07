@@ -1,0 +1,27 @@
+GET https://www.musinsa.com/category/025?d_cat_cd=025&brand=lloyd&rate=&page_kind=search&list_kind=small&sort=pop&sub_sort=&page=1&display_cnt=90&sale_goods=&group_sale=&kids=N&ex_soldout=&color=&price1=&price2=&exclusive_yn=&shoeSizeOption=&tags=&campaign_id=&timesale_yn=&q=&includeKeywords=&measure= HTTP/1.1
+
+# https://www.musinsa.com/category/025
+# ?d_cat_cd=025
+# &brand=lloyd
+# &rate=
+# &page_kind=search
+# &list_kind=small
+# &sort=pop
+# &sub_sort=
+# &page=1
+# &display_cnt=90
+# &sale_goods=
+# &group_sale=
+# &kids=N
+# &ex_soldout=
+# &color=
+# &price1=
+# &price2=
+# &exclusive_yn=
+# &shoeSizeOption=
+# &tags=
+# &campaign_id=
+# &timesale_yn=
+# &q=
+# &includeKeywords=
+# &measure=
