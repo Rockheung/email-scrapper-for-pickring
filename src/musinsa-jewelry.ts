@@ -1,9 +1,25 @@
-export {};
+async function loadGoodsPage(goodsNo: string) {
+  const goodsPage = document.createElement("iframe");
+  goodsPage.setAttribute(
+    "style",
+    "height:0;width:0;border:0;border:none;visibility:hidden;"
+  );
+  goodsPage.src = "https://www.musinsa.com/app/goods/" + goodsNo;
+  document.body.appendChild(goodsPage);
+  await new Promise((resolve) => goodsPage.addEventListener("load", resolve));
+  return goodsPage;
+}
 
-declare global {
-  interface Window {
-    $: JQuery;
-  }
+async function loadBrandPage(brandName: string) {
+  const brandPage = document.createElement("iframe");
+  brandPage.setAttribute(
+    "style",
+    "height:0;width:0;border:0;border:none;visibility:hidden;"
+  );
+  brandPage.src = "https://www.musinsa.com/brands/" + brandName;
+  document.body.appendChild(brandPage);
+  await new Promise((resolve) => brandPage.addEventListener("load", resolve));
+  return brandPage;
 }
 
 async function main() {
@@ -15,10 +31,7 @@ async function main() {
         brandNames.push(_anchor.dataset["code"]);
       }
     });
-  console.log(
-    "🚀 ~ file: musinsa-jewelry.ts ~ line 13 ~ brandNames ~ brandNames",
-    brandNames
-  );
+  brandNames.slice(0, 1).map(loadBrandPage);
 }
 
 main().catch(console.error);
