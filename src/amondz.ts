@@ -1,4 +1,11 @@
 import Cookies from "js-cookie";
+import _ from "lodash";
+
+const BRAND_SIZE = 30;
+
+type ResWithData<T> = {
+  data: T;
+};
 
 type InfoPayload = {
   storeId: number;
@@ -9,7 +16,27 @@ type ListPayload = {
   startIndex: number;
 };
 
-const getCompanyInfo = (body: InfoPayload) =>
+type BrandStoreInfo = {
+  storeId: number;
+  storeName: string;
+};
+
+type BrandInfo = {
+  asPhone: string;
+  brandName: string;
+  companyAddress: string;
+  email: string;
+  kakaoAccount: string;
+  returnAddress: string;
+};
+
+type BrandListData = {
+  allBrandCount: number;
+  allBrandList: BrandStoreInfo[];
+  topBrandList: any[];
+};
+
+const getBrandInfo = (body: InfoPayload): Promise<ResWithData<BrandInfo>> =>
   fetch("https://api.amondz.com/api/brand/detail/info/web/v1", {
     headers: {
       accept: "application/json, text/plain, */*",
@@ -36,9 +63,9 @@ const getCompanyInfo = (body: InfoPayload) =>
     mode: "cors",
     credentials: "include",
     body: JSON.stringify(body),
-  });
+  }).then((res) => res.json());
 
-const getCompanyList = (body: ListPayload) =>
+const getBrandList = (body: ListPayload): Promise<ResWithData<BrandListData>> =>
   fetch("https://api.amondz.com/api/brand/list/pagination/web/v1", {
     headers: {
       accept: "application/json, text/plain, */*",
@@ -65,14 +92,62 @@ const getCompanyList = (body: ListPayload) =>
     mode: "cors",
     credentials: "include",
     body: JSON.stringify(body),
-  });
+  }).then((res) => res.json());
 
 async function main() {
   let _csv = "";
-  throw await getCompanyList({
-    startIndex: 0,
-    exceptAllCount: true,
-  });
+  let startIndex = 0;
+  let brands: BrandStoreInfo[] = [];
+  let allCount = Number.MAX_SAFE_INTEGER;
+
+  console.log(Cookies.get("amondz_uuid"));
+
+  for (; startIndex < allCount; startIndex += BRAND_SIZE) {
+    const { data } = await getBrandList({ exceptAllCount: false, startIndex });
+    allCount = data.allBrandCount;
+    brands = brands.concat(data.allBrandList);
+  }
+
+  const _brands = brands.map((brand) =>
+    getBrandInfo({ storeId: brand.storeId }).then(({ data }) => {
+      return {
+        ...brand,
+        ...data,
+      };
+    })
+  );
+
+  let keys;
+
+  for (const _brand of _brands) {
+    const brandInfo = await _brand;
+    if (!_csv.length) {
+      keys = Object.keys(brandInfo) as Array<keyof typeof brandInfo>;
+      _csv += keys.join(",");
+      _csv += "\n";
+    }
+    _csv +=
+      (keys
+        ?.map((key) => {
+          if (typeof brandInfo[key] === "string") {
+            return `"${brandInfo[key]}"`;
+          } else if (Array.isArray(brandInfo[key])) {
+            return (brandInfo[key] as unknown as string[]).join("|");
+          }
+          return brandInfo[key];
+        })
+        .join(",") || "") + "\n";
+  }
+
+  const enc = new TextEncoder();
+  const csvText = enc.encode(_csv);
+  const csvBlob = new Blob([csvText], { type: "octet/stream" });
+  const csvUrl = URL.createObjectURL(csvBlob);
+
+  const anchor = document.createElement("a");
+  anchor.href = csvUrl;
+  anchor.download = `store_list_amondz_${Date.now().toString(16)}.csv`;
+  anchor.click();
 }
 
-main().catch(console.error);
+main().then(console.log).catch(console.error);
