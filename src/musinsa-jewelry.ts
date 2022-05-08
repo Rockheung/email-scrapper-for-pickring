@@ -23,7 +23,9 @@ async function loadBrandPage(brandName: string) {
 }
 
 async function main() {
+  let _csv = "";
   let brandNames: string[] = [];
+  const brandInfos = [];
   document
     .querySelectorAll<HTMLElement>("#brand_list_area a[data-code]")
     .forEach(function (_anchor) {
@@ -31,7 +33,79 @@ async function main() {
         brandNames.push(_anchor.dataset["code"]);
       }
     });
-  brandNames.slice(0, 1).map(loadBrandPage);
+  for (const brandName of brandNames) {
+    const brandPageIframe = await loadBrandPage(brandName);
+
+    const goodsNo =
+      brandPageIframe.contentWindow?.document.querySelector<HTMLElement>(
+        "#searchList .li_box *[data-goodsno]"
+      )?.dataset["goodsno"];
+
+    if (typeof goodsNo === "undefined") {
+      console.warn("brand:", brandName, "may have no goods.");
+      continue;
+    }
+
+    const goodsPageIframe = await loadGoodsPage(goodsNo);
+
+    const sellerInfoSection =
+      goodsPageIframe.contentWindow?.document.querySelectorAll<HTMLElement>(
+        ".sallerinfo_detail_section dl"
+      );
+    if (typeof sellerInfoSection === "undefined") {
+      console.warn("No seller info.");
+      continue;
+    }
+    let _brandInfo: any = {
+      brandName,
+    };
+    sellerInfoSection.forEach((listItem, idx) => {
+      const _key = listItem.querySelector("dt")?.innerText || idx + "";
+      const _value = listItem.querySelector("dd")?.innerText || "";
+      _brandInfo[_key] = _value;
+    });
+    brandInfos.push(_brandInfo);
+
+    brandPageIframe.remove();
+    goodsPageIframe.remove();
+    console.log(
+      "Collected:",
+      Math.floor((brandInfos.length / brandNames.length) * 100),
+      "%"
+    );
+  }
+
+  let keys;
+
+  for (const _brand of brandInfos) {
+    const brandInfo = await _brand;
+    if (!_csv.length) {
+      keys = Object.keys(brandInfo) as Array<keyof typeof brandInfo>;
+      _csv += keys.join(",");
+      _csv += "\n";
+    }
+    _csv +=
+      (keys
+        ?.map((key) => {
+          if (typeof brandInfo[key] === "string") {
+            return `"${brandInfo[key]}"`;
+          } else if (Array.isArray(brandInfo[key])) {
+            return (brandInfo[key] as unknown as string[]).join("|");
+          }
+          return brandInfo[key];
+        })
+        .join(",") || "") + "\n";
+  }
+
+  const enc = new TextEncoder();
+  const csvText = enc.encode(_csv);
+  const csvBlob = new Blob([csvText], { type: "octet/stream" });
+  const csvUrl = URL.createObjectURL(csvBlob);
+
+  const anchor = document.createElement("a");
+  anchor.href = csvUrl;
+  anchor.download = `store_list_musinsa_jewelry_${Date.now().toString(16)}.csv`;
+  anchor.click();
 }
 
 main().catch(console.error);
