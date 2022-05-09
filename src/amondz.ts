@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import _ from "lodash";
+import { collection2csv, downloadBlob, string2blob } from "./utils";
 
 const BRAND_SIZE = 30;
 
@@ -108,46 +109,24 @@ async function main() {
     brands = brands.concat(data.allBrandList);
   }
 
-  const _brands = brands.map((brand) =>
+  const brandsInfos: (BrandInfo & BrandStoreInfo)[] = [];
+
+  const _brandRequests = brands.map((brand) =>
     getBrandInfo({ storeId: brand.storeId }).then(({ data }) => {
-      return {
+      brandsInfos.push({
         ...brand,
         ...data,
-      };
+      });
     })
   );
 
-  let keys;
-
-  for (const _brand of _brands) {
-    const brandInfo = await _brand;
-    if (!_csv.length) {
-      keys = Object.keys(brandInfo) as Array<keyof typeof brandInfo>;
-      _csv += keys.join(",");
-      _csv += "\n";
-    }
-    _csv +=
-      (keys
-        ?.map((key) => {
-          if (typeof brandInfo[key] === "string") {
-            return `"${brandInfo[key]}"`;
-          } else if (Array.isArray(brandInfo[key])) {
-            return (brandInfo[key] as unknown as string[]).join("|");
-          }
-          return brandInfo[key];
-        })
-        .join(",") || "") + "\n";
+  for (const _brandRequest of _brandRequests) {
+    await _brandRequest;
   }
 
-  const enc = new TextEncoder();
-  const csvText = enc.encode(_csv);
-  const csvBlob = new Blob([csvText], { type: "octet/stream" });
-  const csvUrl = URL.createObjectURL(csvBlob);
-
-  const anchor = document.createElement("a");
-  anchor.href = csvUrl;
-  anchor.download = `store_list_amondz_${Date.now().toString(16)}.csv`;
-  anchor.click();
+  const csv = collection2csv<BrandInfo & BrandStoreInfo>(brandsInfos);
+  const csvBlob = string2blob(csv);
+  downloadBlob(csvBlob, `store_list_amondz_${Date.now().toString(16)}.csv`);
 }
 
 main().then(console.log).catch(console.error);

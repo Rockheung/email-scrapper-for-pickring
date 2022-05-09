@@ -1,3 +1,5 @@
+import { collection2csv, downloadBlob, string2blob } from "./utils";
+
 async function loadGoodsPage(goodsNo: string) {
   const goodsPage = document.createElement("iframe");
   goodsPage.setAttribute(
@@ -68,8 +70,18 @@ async function main() {
     });
     brandInfos.push(_brandInfo);
 
+    if (brandPageIframe.contentDocument) {
+      brandPageIframe.contentDocument.body.innerText = "";
+      brandPageIframe.contentDocument.head.innerText = "";
+    }
     brandPageIframe.remove();
+
+    if (goodsPageIframe.contentDocument) {
+      goodsPageIframe.contentDocument.body.innerText = "";
+      goodsPageIframe.contentDocument.head.innerText = "";
+    }
     goodsPageIframe.remove();
+
     console.log(
       "Collected:",
       Math.floor((brandInfos.length / brandNames.length) * 100),
@@ -77,37 +89,12 @@ async function main() {
     );
   }
 
-  let keys;
-
-  for (const _brand of brandInfos) {
-    const brandInfo = await _brand;
-    if (!_csv.length) {
-      keys = Object.keys(brandInfo) as Array<keyof typeof brandInfo>;
-      _csv += keys.join(",");
-      _csv += "\n";
-    }
-    _csv +=
-      (keys
-        ?.map((key) => {
-          if (typeof brandInfo[key] === "string") {
-            return `"${brandInfo[key]}"`;
-          } else if (Array.isArray(brandInfo[key])) {
-            return (brandInfo[key] as unknown as string[]).join("|");
-          }
-          return brandInfo[key];
-        })
-        .join(",") || "") + "\n";
-  }
-
-  const enc = new TextEncoder();
-  const csvText = enc.encode(_csv);
-  const csvBlob = new Blob([csvText], { type: "octet/stream" });
-  const csvUrl = URL.createObjectURL(csvBlob);
-
-  const anchor = document.createElement("a");
-  anchor.href = csvUrl;
-  anchor.download = `store_list_musinsa_jewelry_${Date.now().toString(16)}.csv`;
-  anchor.click();
+  const csv = collection2csv(brandInfos);
+  const csvBlob = string2blob(csv);
+  downloadBlob(
+    csvBlob,
+    `store_list_musinsa_jewelry_${Date.now().toString(16)}.csv`
+  );
 }
 
 main().catch(console.error);
