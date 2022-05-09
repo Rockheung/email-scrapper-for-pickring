@@ -4,6 +4,7 @@ async function loadGoodsPage(goodsNo: string) {
     "style",
     "height:0;width:0;border:0;border:none;visibility:hidden;"
   );
+  goodsPage.setAttribute("sandbox", "allow-same-origin");
   goodsPage.src = "https://www.musinsa.com/app/goods/" + goodsNo;
   document.body.appendChild(goodsPage);
   await new Promise((resolve) => goodsPage.addEventListener("load", resolve));
@@ -16,6 +17,7 @@ async function loadBrandPage(brandName: string) {
     "style",
     "height:0;width:0;border:0;border:none;visibility:hidden;"
   );
+  brandPage.setAttribute("sandbox", "allow-same-origin");
   brandPage.src = "https://www.musinsa.com/brands/" + brandName;
   document.body.appendChild(brandPage);
   await new Promise((resolve) => brandPage.addEventListener("load", resolve));
